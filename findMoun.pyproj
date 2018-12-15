@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>cc4ece67-c996-498f-93ef-af20ea25a635</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>MainMuonDetector.pyw</StartupFile>
+    <StartupFile>MainMuonDetector.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -22,7 +22,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="findPeaks.pyw" />
-    <Compile Include="MainMuonDetector.pyw" />
+    <Compile Include="MainMuonDetector.py" />
     <Compile Include="mplwidget.py" />
     <Compile Include="oscillator.py" />
     <Compile Include="tablewidget.py" />

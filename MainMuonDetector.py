@@ -1,5 +1,5 @@
 """
-Author: Chen Xianwei & WnagYufeng
+Author: Chen Xianwei & WangYufeng
 Zhejiang University, Hangzhou, China
 Date: 2018/11/21
 Version: V 1.0
@@ -28,13 +28,11 @@ class DesignerMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.selectButton.clicked.connect(self.Start_to_do_something)
         self.stopButton.clicked.connect(self.Start_to_do_nothing)
         self.tableWidget.cellClicked.connect(self.update_graph)
-        #self.actionopen_file.triggered.connect(self.broom)
-        #self.actionopen_folder.triggered.connect(self.browse)
         self.actionexit_it.triggered.connect(app.quit)
         self.actionAbout_QT.triggered.connect(self.aboutQT)
         self.actionAbout_PYQT.triggered.connect(self.aboutPYQT)
         self.actionAbout_ZJU.triggered.connect(self.aboutZJU)
-        self.tableWidget.setHorizontalHeaderLabels(['文件名称'])
+        self.tableWidget.setHorizontalHeaderLabels(['filename'])
         self.tableWidget.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         self.line_Directory.setReadOnly(True)
         self.textEdit.setReadOnly(True)
@@ -45,6 +43,8 @@ class DesignerMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.analysis.saving_signal.connect(self.AnalysisInfo)
         self.analysis.save_img.connect(self.save_img)
         self.analysis.save_ans.connect(self.save_ans)
+        self.analysis.save_pow.connect(self.save_pow)
+        self.analysis.save_qow.connect(self.save_qow)
         self.currentwave = []
         self.count = 0
         self.modeposition = 0
@@ -63,7 +63,6 @@ class DesignerMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             row = self.tableWidget.rowCount()
             self.tableWidget.insertRow(row)
             self.tableWidget.setItem(row, 0, name)
-            #self.tableWidget.setItem(row, 1, analysis)
 
     
     def get_the_wave(self, filename):
@@ -77,10 +76,10 @@ class DesignerMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def Oscillator_save(self,  x,  y,  n):
         if (Ui_MainWindow.stdo == 1):
             n = len(os.listdir(self.line_Directory.text()))
-            self.textEdit.append('...已经获取第' + str(n) + '个峰')
-            self.textEdit.append('...已经在另一线程执行保存文件操作，准备获取下一个峰')
-            self.textEdit.append('...已经重新与示波器进行连接')
-            self.textEdit.append('...正在等待第' + str(n + 1) + '个峰')
+            self.textEdit.append('...We have already gotten ' + str(n) + ' signals')
+            self.textEdit.append('...preparing for the next signal')
+            self.textEdit.append('...connection rebuild')
+            self.textEdit.append('...waiting for the next signal')
             self.textEdit.append('...')
             outfile = open(self.line_Directory.text() + '/' + str(n) + '.txt', 'w+')
             for _x, _y in zip(x,y):
@@ -206,7 +205,23 @@ class DesignerMainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             plt.xlabel('The life time of moun(us)')
             plt.ylabel('The number of the moun')
             plt.savefig(self.line_Directory.text() + '\\' + 'finalDistribution.jpg')
+            plt.close()
+
+    def save_pow(self, title, distribute):
+            plt.bar(range(len(distribute)), distribute)
+            plt.title(title)
+            plt.xlabel('The power level of moun(V)')
+            plt.ylabel('The number of the moun')
+            plt.savefig(self.line_Directory.text() + '\\' + 'powerofMoun.jpg')
             plt.show()
+
+    def save_qow(self, title, distribute):
+            plt.bar(range(len(distribute)), distribute)
+            plt.title(title)
+            plt.xlabel('The power level of elec(V)')
+            plt.ylabel('The number of the moun')
+            plt.savefig(self.line_Directory.text() + '\\' + 'powerofElec.jpg')
+            plt.close()
 
 class Getthread(QtCore.QThread):
         #直接从示波器获取的线程
@@ -239,24 +254,28 @@ class Analysis(QtCore.QThread):
         saving_signal = QtCore.pyqtSignal(str)
         save_img = QtCore.pyqtSignal(np.ndarray, np.ndarray, int, np.ndarray)
         save_ans = QtCore.pyqtSignal(str, list)
+        save_pow = QtCore.pyqtSignal(str, list)
+        save_qow = QtCore.pyqtSignal(str, list)
         def __init__(self):
             super(Analysis, self).__init__()
         def begin(self, directory):
             self.directory = directory
             self.start()
 
-        
-
-
-        
-
         def run(self):
             while Ui_MainWindow.stdo == 1:
-                distribute = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+                distribute_lifetime = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+                distribute_moun     = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+                distribute_elec     = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
-                ave_time = 0.0
+                ave_time  = 0.0
+                ave_power = 0.0
+                ave_qower = 0.0
 
-                num_of_moun = 0
+                num_of_moun   = 0
+                power_of_moun = 0
+                power_of_elec = 0
+
                 try:
                     num_of_file = len(os.listdir(self.directory))
                 except:
@@ -287,51 +306,115 @@ class Analysis(QtCore.QThread):
                         indexes = peakutils.indexes(y, thres=0.2, min_dist=20)
 
 
-                        if (len(indexes) >= 2 and y[int((indexes[0] + indexes[1]) / 2)] < (0.9 * min(y[indexes[0]], y[indexes[1]]))):
+                        if (len(indexes) >= 2 and y[int((indexes[0] + indexes[1]) / 2)] < (0.9 * min(y[indexes[0]], y[indexes[1]])) and y[indexes[0]] == max(y[indexes])):
 
+                            indexes = np.delete(indexes, range(2, len(indexes)))
+                            print(indexes)
                             self.save_img.emit(x, y, i, indexes)
 
                             if x[indexes[1]] - x[indexes[0]] < 1e-6:
-                                distribute[0] += 1
+                                distribute_lifetime[0] += 1
                             elif 1e-6 <= x[indexes[1]] - x[indexes[0]] < 2e-6:
-                                distribute[1] += 1
+                                distribute_lifetime[1] += 1
                             elif 2e-6 <= x[indexes[1]] - x[indexes[0]] < 3e-6:
-                                distribute[2] += 1
+                                distribute_lifetime[2] += 1
                             elif 3e-6 <= x[indexes[1]] - x[indexes[0]] < 4e-6:
-                                distribute[3] += 1
+                                distribute_lifetime[3] += 1
                             elif 4e-6 <= x[indexes[1]] - x[indexes[0]] < 5e-6:
-                                distribute[4] += 1
+                                distribute_lifetime[4] += 1
                             elif 5e-6 <= x[indexes[1]] - x[indexes[0]] < 6e-6:
-                                distribute[5] += 1
+                                distribute_lifetime[5] += 1
                             elif 6e-6 <= x[indexes[1]] - x[indexes[0]] < 7e-6:
-                                distribute[6] += 1
+                                distribute_lifetime[6] += 1
                             elif 7e-6 <= x[indexes[1]] - x[indexes[0]] < 8e-6:
-                                distribute[7] += 1
+                                distribute_lifetime[7] += 1
                             elif 8e-6 <= x[indexes[1]] - x[indexes[0]] < 9e-6:
-                                distribute[8] += 1
+                                distribute_lifetime[8] += 1
                             elif 9e-6 <= x[indexes[1]] - x[indexes[0]] < 10e-6:
-                                distribute[9] += 1
+                                distribute_lifetime[9] += 1
                             else:
-                                distribute[10] += 1
+                                distribute_lifetime[10] += 1
 
                             ave_time += x[indexes[1]] - x[indexes[0]]
-            
-                for item in distribute:
-                    num_of_moun += item
 
+                            if y[indexes[0]] < 0.5:
+                                distribute_moun[0] += 1
+                            elif 0.5 <= y[indexes[0]] < 1:
+                                distribute_moun[1] += 1
+                            elif 1 <= y[indexes[0]] < 1.5:
+                                distribute_moun[2] += 1
+                            elif 1.5 <= y[indexes[0]] < 2:
+                                distribute_moun[3] += 1
+                            elif 2 <= y[indexes[0]] < 2.5:
+                                distribute_moun[4] += 1
+                            elif 2.5 <= y[indexes[0]] < 3:
+                                distribute_moun[5] += 1
+                            elif 3 <= y[indexes[0]] < 3.5:
+                                distribute_moun[6] += 1
+                            elif 3.5 <= y[indexes[0]] < 4:
+                                distribute_moun[7] += 1
+                            elif 4 <= y[indexes[0]] < 4.5:
+                                distribute_moun[8] += 1
+                            elif 4.5 <= y[indexes[0]] < 5:
+                                distribute_moun[9] += 1
+                            else:
+                                distribute_moun[10] += 1
+
+                            ave_power += y[indexes[0]]
+
+                            if y[indexes[1]] < 0.5:
+                                distribute_elec[0] += 1
+                            elif 0.5 <= y[indexes[1]] < 1:
+                                distribute_elec[1] += 1
+                            elif 1 <= y[indexes[1]] < 1.5:
+                                distribute_elec[2] += 1
+                            elif 1.5 <= y[indexes[1]] < 2:
+                                distribute_elec[3] += 1
+                            elif 2 <= y[indexes[1]] < 2.5:
+                                distribute_elec[4] += 1
+                            elif 2.5 <= y[indexes[1]] < 3:
+                                distribute_elec[5] += 1
+                            elif 3 <= y[indexes[1]] < 3.5:
+                                distribute_elec[6] += 1
+                            elif 3.5 <= y[indexes[1]] < 4:
+                                distribute_elec[7] += 1
+                            elif 4 <= y[indexes[1]] < 4.5:
+                                distribute_elec[8] += 1
+                            elif 4.5 <= y[indexes[1]] < 5:
+                                distribute_elec[9] += 1
+                            else:
+                                distribute_elec[10] += 1
+
+                            ave_qower += y[indexes[1]]
+            
+                for item in distribute_lifetime:
+                    num_of_moun += item
+                for item in distribute_moun:
+                    power_of_moun += item
+                for item in distribute_elec:
+                    power_of_elec += item
                 try:
-                    ave_time /= num_of_moun
+                    ave_time  /= num_of_moun
+                    ave_power /= power_of_moun
+                    ave_qower /= power_of_elec
 
                 except ZeroDivisionError:
-                    self.save_ans.emit('Sorry! No moun!', distribute)
+                    self.save_ans.emit('Sorry! No moun!', distribute_lifetime)
+                    self.save_qow.emit('Sorry! No moun!', distribute_moun)
+                    self.save_pow.emit('Sorry! No moun!', distribute_moun)
                     self.saving_signal.emit('Done!!')
-                    self.saving_signal.emit('The number of moun is ' + str(num_of_moun) + ' in ' + str(len(os.listdir(self.directory))) + ' datas!')
+                    self.saving_signal.emit('The number of moun is ' + str(num_of_moun) + ' in ' + str(len(os.listdir(self.directory))) + 'datas!')
                     Ui_MainWindow.stdo = 0
-                
+
                 else:
-                    self.save_ans.emit('The number of moun is ' + str(num_of_moun) + '\n' + 'The average lifetime is ' + str(ave_time), distribute)
+                    self.save_ans.emit('The number of moun is ' + str(num_of_moun) + '\n' + 'The average lifetime is ' + str(ave_time), distribute_lifetime)
+                    self.save_qow.emit('The average power of moun is ' + str(ave_qower), distribute_elec)
+                    self.save_pow.emit('The average power of moun is ' + str(ave_power), distribute_moun)
                     self.saving_signal.emit('Done!!')
-                    self.saving_signal.emit('The number of moun is ' + str(num_of_moun) + ' in ' + str(len(os.listdir(self.directory))) + ' datas!' + '\n' + 'The average lifetime is ' + str(ave_time))
+                    self.saving_signal.emit('The number of moun is ' + str(num_of_moun) + ' in ' + str(len(os.listdir(self.directory))) + 'datas!')
+                    self.saving_signal.emit('The average lifetime is' + str(ave_time))
+                    self.saving_signal.emit('The average power of elec is' + str(ave_qower))
+                    self.saving_signal.emit('The average power of moun is' + str(ave_power))
                     Ui_MainWindow.stdo = 0
                 
 
