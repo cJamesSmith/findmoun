@@ -20,7 +20,7 @@ class ChannelParameters:
 
 class TDS1012B:
     def __init__(self):
-        self.visa = find_instrument() # This function is used to find if the oscillator exists
+        self.visa = find_instrument('TDS') # This function is used to find if the oscillator exists
         self.identity = 'TDS1012B'
         self.channel1 = ChannelParameters(1)
         self.channel2 = ChannelParameters(2)
