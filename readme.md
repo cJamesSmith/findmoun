@@ -25,6 +25,7 @@
 <span> </span><span style="font-size:18px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pillow</span><br />
 <span> </span><span style="font-size:18px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sip</span><br />
 <span> </span><span style="font-size:18px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pyqt5</span><br />
+<span> </span><span style="font-size:18px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;scipy</span><br />
 <span> </span><span style="font-size:18px;">&nbsp;&nbsp;&nbsp;&nbsp;Tektronix support:</span><br />
 <span> </span><span style="font-size:18px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;https://www.tek.com.cn/product-support</span> 
 </p>
