@@ -19,7 +19,7 @@ class MplCanvas(FigureCanvas):
         self.ax = self.fig.add_subplot(111)
         self.ax.set_title('Original Wave')
         self.ax.set_ylabel(r'$Amplitude(V)$')
-        self.ax.set_xticklabels( ('0', '2.0', '4.0', '6.0', '8.0',  '10.0'))
+        self.ax.set_xticklabels( ('0', '1.0', '2.0', '3.0', '4.0',  '5.0'))
         self.ax.xlable = ('time(s)')
         # initialization of the canvas
         FigureCanvas.__init__(self, self.fig)

@@ -2,7 +2,7 @@ import visa
 import sys
 from ..utils.error import Error
 
-def find_instrument(name):
+def find_instrument():
     resource_manager = visa.ResourceManager()
     resource_list = resource_manager.list_resources()
 
@@ -14,7 +14,6 @@ def find_instrument(name):
         except:
             Error("find_instrument", sys.exec_info()[0])
         else:
-            if device.query('*IDN?').find(name) != -1:
-                return device
+            return device
 
 
